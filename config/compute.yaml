@@ -1,9 +1,10 @@
 kind: "Compute"
 version: "1"
+metadata:
+  envTypes: ["rde"]
 data:
   services:
-    - name: first-compute
-    - name: second-compute
+    - name: token-replace
   # Uncomment to enable secrets
   # secrets:
   #   - key: API_TOKEN
