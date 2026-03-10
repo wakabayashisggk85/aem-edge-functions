@@ -8,8 +8,8 @@ data:
       - name: fr-token-replace
         when: { 
           allOf: [
-            { reqProperty: tier, equals: "publish" },
-            { reqProperty: path, like: "/fr/fr" }
+            { reqProperty: tier, equals: publish },
+            { reqProperty: path, like: /content/b2c/fr/fr* }
           ]
         }
         action:

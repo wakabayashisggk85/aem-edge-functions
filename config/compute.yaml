@@ -5,6 +5,7 @@ metadata:
 data:
   services:
     - name: token-replace
+
   # Uncomment to enable secrets
   # secrets:
   #   - key: API_TOKEN
