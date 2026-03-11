@@ -29,7 +29,7 @@ async function handleRequest(event) {
   originUrl.host = PUBLISH_HOST;
 
   const originRequest = new Request(originUrl.toString(), request);
-  const originResponse = await fetch(originRequest);
+  const originResponse = await fetch(originRequest, { backend: 'aem-publish' });
 
   // Defense in depth: only process /content/b2c/fr/fr*; otherwise just passthrough.
   if (!url.pathname.startsWith('/content/b2c/fr/fr')) {

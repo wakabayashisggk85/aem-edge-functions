@@ -5,6 +5,11 @@ metadata:
 data:
   services:
     - name: token-replace
+  origins:
+    - name: aem-publish
+      # This is the AEM publish backend host (not the Fastly frontend).
+      # For your env, use the adobeaemcloud.net host:
+      domain: publish-p126355-e1378027.adobeaemcloud.net
 
   # Uncomment to enable secrets
   # secrets:
