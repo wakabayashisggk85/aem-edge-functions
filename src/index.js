@@ -12,11 +12,8 @@ governing permissions and limitations under the License.
 
 // <reference types="@fastly/js-compute" />
 
-// Optional: if you want structured logging, re‑enable this and make sure log()
-// can handle being called with (req, resp).
-// import { log } from './lib/log.js';
-
-const PUBLISH_HOST = 'publish-p126355-e1378027.adobeaemcloud.com';
+import * as response from './lib/response.js';
+import { log } from './lib/log.js';
 
 addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 
@@ -24,12 +21,8 @@ async function handleRequest(event) {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Always send the origin fetch to AEM Publish, not back to this Fastly service.
-  const originUrl = new URL(request.url);
-  originUrl.host = PUBLISH_HOST;
-
-  const originRequest = new Request(originUrl.toString(), request);
-  const originResponse = await fetch(originRequest, { backend: 'aem-publish' });
+  request.headers.set("X-EdgeFunction-Key", "a8f3b9e2c4d6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6");
+  const originResponse = await fetch(request);
 
   // Defense in depth: only process /content/b2c/fr/fr*; otherwise just passthrough.
   if (!url.pathname.startsWith('/content/b2c/fr/fr')) {
@@ -77,7 +70,7 @@ async function handleRequest(event) {
   });
 
   // Optional logging:
-  // log(request, finalResponse);
+  log(request, finalResponse);
 
   return finalResponse;
 }
