@@ -21,8 +21,14 @@ async function handleRequest(event) {
   const request = event.request;
   const url = new URL(request.url);
 
-  request.headers.set("X-EdgeFunction-Key", "a8f3b9e2c4d6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6");
-  const originResponse = await fetch(request);
+  const originHeaders = new Headers(request.headers);
+  originHeaders.set("X-EdgeFunction-Key", "a8f3b9e2c4d6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6");
+  const originRequest = new Request(url, {
+    method: request.method,
+    headers: originHeaders,
+    body: request.body
+  });
+  const originResponse = await fetch(originRequest);
 
   // Defense in depth: only process /content/b2c/fr/fr*; otherwise just passthrough.
   if (!url.pathname.startsWith('/content/b2c/fr/fr')) {
