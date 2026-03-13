@@ -19,16 +19,33 @@ addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 
 async function handleRequest(event) {
   const request = event.request;
-  const url = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  console.log(`Received request for ${requestUrl}`);
+  // fetch domain for a new url from x-forwarded-host header, but keep path/query intact
+  const xForwardedHost = request.headers.get('x-forwarded-host');
+  const url = new URL(`${requestUrl.protocol}//${xForwardedHost}${requestUrl.pathname}${requestUrl.search}`);
+  console.log(`Received request for ${url}`);
 
   const originHeaders = new Headers(request.headers);
   originHeaders.set("X-EdgeFunction-Key", "a8f3b9e2c4d6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6");
+  originHeaders.delete('host'); // Let the browser set the correct host header for the origin request
+  originHeaders.delete('accept-encoding');
+  originHeaders.set('accept-encoding', 'identity');
+  // remove fastly headers
+  originHeaders.delete('fastly-client-ip');
+  originHeaders.delete('fastly-client');
+  originHeaders.delete('fastly-ff');
+  originHeaders.delete('fastly-orig-accept-encoding');
+  originHeaders.delete('fastly-ssl');
+  originHeaders.delete('Fastly');
   const originRequest = new Request(url, {
     method: request.method,
     headers: originHeaders,
     body: request.body
   });
+  console.log(`Request to origin: ${originRequest.url} with headers: ${[...originRequest.headers.entries()]}`);
   const originResponse = await fetch(originRequest);
+  console.log(`Received response from origin with status: ${originResponse.status} and headers: ${[...originResponse.headers.entries()]}`);
 
   // Defense in depth: only process /content/b2c/fr/fr*; otherwise just passthrough.
   if (!url.pathname.startsWith('/content/b2c/fr/fr')) {
@@ -45,7 +62,8 @@ async function handleRequest(event) {
 
   // --- Static token dictionary (customize as needed) ---
   const TOKEN_MAP = {
-    'MSC Cruises': 'MSC Croisières',
+    //'MSC Cruises': 'MSC Croisières',
+    'MSC': 'CBO',
     // Add more tokens here, e.g.:
     // '%%FOO%%': 'bar',
   };
