@@ -1,19 +1,82 @@
-kind: 'CDN'
-version: '1'
+kind: "CDN"
+version: "1"
 metadata:
   envTypes: ["rde"]
 data:
   originSelectors:
     rules:
+      # Proxy-pass /etc.clientlibs/* to www.msccruises.co.uk
+      - name: fetch-clientlibs-from-msccruises
+        when:
+          allOf:
+            - reqProperty: tier
+              equals: publish
+            - reqProperty: path
+              like: "/etc.clientlibs/*"
+            - reqProperty: domain
+              equals: publish-p126355-e1378027.adobeaemcloud.com
+        action:
+          type: selectOrigin
+          originName: msccruises-clientlibs
+
+      # Proxy-pass /etc.clientlibs/* to www.msccruises.co.uk
+      - name: fetch-static-from-msccruises
+        when:
+          allOf:
+            - reqProperty: tier
+              equals: publish
+            - reqProperty: path
+              like: "/static/*"
+            - reqProperty: domain
+              equals: publish-p126355-e1378027.adobeaemcloud.com
+        action:
+          type: selectOrigin
+          originName: msccruises-clientlibs
+
+      # Your existing FR → compute rule
       - name: fr-token-replace
-        when: { 
-          allOf: [
-            { reqProperty: tier, equals: publish },
-            { reqProperty: path, like: /content/b2c/fr/fr* },
-            { reqHeader: X-EdgeFunction-Key, doesNotEqual: a8f3b9e2c4d6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6 }
-          ]
-        }
+        when:
+          allOf:
+            - reqProperty: tier
+              equals: publish
+            - reqProperty: path
+              like: /content/b2c/fr/fr*
+            - reqProperty: domain
+              equals: publish-p126355-e1378027.adobeaemcloud.com
         action:
           type: selectAemOrigin
           originName: compute-token-replace
           skipCache: false
+
+    # Define the external origin here
+    origins:
+      - name: msccruises-clientlibs
+        domain: www.msccruises.ch
+        # optional: forwardHost, forwardCookie, timeout, etc.
+
+  
+  requestTransformations:
+    rules:
+      - name: strip-referer-for-msccruises-assets
+        when:
+          allOf:
+            - reqProperty: tier
+              equals: publish
+            - reqProperty: path
+              like: "/static/*"
+        action:
+          type: modifyRequest
+          removeHeaders:
+            - Referer
+
+      - name: strip-referer-for-msccruises-clientlibs
+        when:
+          allOf:
+            - reqProperty: tier
+              equals: publish
+            - reqProperty: path
+              like: "/etc.clientlibs/*"
+        action:
+          type: modifyRequest
+          removeHeaders:
+            - Referer
