@@ -1,7 +1,7 @@
 kind: 'CDN'
 version: '1'
 metadata:
-  envTypes: ["rde"]
+  envTypes: ["rde", "dev"]
 data:
   originSelectors:
     rules:
@@ -9,7 +9,8 @@ data:
         when: { 
           allOf: [
             { reqProperty: tier, equals: publish },
-            { reqProperty: path, like: /content/b2c/fr/fr* },
+            #{ reqProperty: path, like: /content/b2c/fr/fr* },
+            { reqHeader: x-forwarded-host, like: https://b2cw-test-live-fr.msccruises.com },
             { reqHeader: X-EdgeFunction-Key, doesNotEqual: a8f3b9e2c4d6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6 }
           ]
         }

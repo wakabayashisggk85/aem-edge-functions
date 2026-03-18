@@ -1,7 +1,7 @@
 kind: "Compute"
 version: "1"
 metadata:
-  envTypes: ["rde"]
+  envTypes: ["rde", "dev"]
 data:
   services:
     - name: token-replace
