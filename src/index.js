@@ -15,9 +15,17 @@ governing permissions and limitations under the License.
 import { log } from './lib/log.js';
 import { TokenReplaceTransform } from './lib/tokenReplaceTransform.js';
 
-// Static token dictionary
-const TOKEN_MAP = {
+// France token dictionary
+const FR_TOKEN_MAP = {
   'MSC Cruises': 'MSC Croisières',
+  'MSC CRUISES': 'MSC CROISIÈRES'
+  // Add more tokens here...
+};
+
+// Austrian token dictionary
+const AT_TOKEN_MAP = {
+  'massgeschneiderte': 'maßgeschneiderte',
+  'massstäbe': 'maßstäbe',
   // Add more tokens here...
 };
 
@@ -64,6 +72,14 @@ async function handleRequest(event) {
     return originResponse;
   }
 
+  let currentTokenMap = {};
+  //let currentTokenMap = FR_TOKEN_MAP; // default for RDE testing
+  if (xForwardedHost.includes('fr')) {
+    currentTokenMap = FR_TOKEN_MAP;
+  } else if (xForwardedHost.includes('at')) {
+    currentTokenMap = AT_TOKEN_MAP;
+  }
+
   // Clone headers and clear length/encoding (we will modify body)
   const respHeaders = new Headers(originResponse.headers);
   const encoding = respHeaders.get('content-encoding') || '';
@@ -81,7 +97,7 @@ async function handleRequest(event) {
 
   // Apply token replacement as a streaming transform
   let replacedStream = readable.pipeThrough(
-    new TokenReplaceTransform(TOKEN_MAP)
+    new TokenReplaceTransform(currentTokenMap)
   );
 
   if (encoding.includes('gzip')) {
