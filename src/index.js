@@ -68,7 +68,7 @@ async function handleRequest(event) {
 
   const contentType = originResponse.headers.get('content-type') || '';
   // Only process HTML responses.
-  if (!contentType.includes('text/html') && !contentType.includes('application/json')) {
+  if (!contentType.includes('text/html') && !contentType.includes('application/json') && !contentType.includes('application/graphql-response+json')) {
     return originResponse;
   }
 
