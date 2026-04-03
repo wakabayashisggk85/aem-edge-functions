@@ -8,7 +8,7 @@
 /// <reference types="@fastly/js-compute" />
 
 export class TokenReplaceTransform extends TransformStream {
-  constructor(tokenMap) {
+  constructor(tokenMap, patternRules = []) {
     const textDecoder = new TextDecoder();
     const textEncoder = new TextEncoder();
 
@@ -16,14 +16,23 @@ export class TokenReplaceTransform extends TransformStream {
       transform(chunk, controller) {
         const text = textDecoder.decode(chunk, { stream: true });
         let replacedText = text;
-        for (const [token, replacement] of Object.entries(tokenMap)) {
-            const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(escapedToken, 'gi');
 
-            replacedText = replacedText.replace(regex, (match) =>
-                applyCasePattern(match, replacement)
-            );
+        // 1) Regex-based rules (MSC exception, ß, etc.)
+        for (const { pattern, replacement } of patternRules) {
+          // For ß we don't need case-preserving, always 'ß' is fine:
+          replacedText = replacedText.replace(pattern, replacement);
         }
+
+        // 2) Literal tokenMap rules (your existing case-preserving logic)
+        for (const [token, replacement] of Object.entries(tokenMap)) {
+          const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(escapedToken, 'gi');
+
+          replacedText = replacedText.replace(regex, (match) =>
+            applyCasePattern(match, replacement)
+          );
+        }
+
         controller.enqueue(textEncoder.encode(replacedText));
       },
     });
@@ -55,16 +64,3 @@ function applyCasePattern(source, target) {
   // Fallback: use target as given
   return target;
 }
-
-/**
- * Applies TOKEN_MAP replacements to a string.
-function applyTokenMap(input, tokenMap) {
-  let output = input;
-  for (const [token, replacement] of Object.entries(tokenMap)) {
-    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(escaped, 'g');
-    output = output.replace(re, replacement);
-  }
-  return output;
-}
- */
