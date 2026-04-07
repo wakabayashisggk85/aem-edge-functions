@@ -21,7 +21,7 @@ addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 async function handleRequest(event) {
   const request = event.request;
   const requestUrl = new URL(request.url);
-  //console.log(`Received request on ${requestUrl}`);
+  console.log(`Received request on ${requestUrl}`);
   // fetch domain for a new url from x-forwarded-host header, but keep path/query intact
   const host = getAemBackend(request.headers.get('host'));
   console.log(`Host header: ${host}`);
@@ -90,6 +90,18 @@ async function handleRequest(event) {
       currentPatternRules = AT_PATTERN_RULES;
       //console.log(`x-forwarded-host ${xForwardedHost} matched 'at'. Using AT token map.`);
     }
+  }
+
+  let isRDE = true;
+  // RDE logic to enable only when RDE env get used (no domain, no shortenings)
+  if (isRDE && requestUrl.pathname.startsWith('/content/b2c/fr/')) {
+    currentTokenMap = FR_TOKEN_MAP;
+    currentPatternRules = FR_PATTERN_RULES;
+    //console.log(`Request URL ${requestUrl.pathname} matched /content/b2c/fr/. Using FR token map.`);
+  } else if (isRDE && requestUrl.pathname.startsWith('/content/b2c/at/')) {
+    currentTokenMap = AT_TOKEN_MAP;
+    currentPatternRules = AT_PATTERN_RULES;
+    //console.log(`Request URL ${requestUrl.pathname} matched /content/b2c/at/. Using AT token map.`);
   }
 
   // Clone headers and clear length/encoding (we will modify body)
